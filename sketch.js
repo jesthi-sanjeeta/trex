@@ -9,6 +9,7 @@ var obstaclesGroup,obstacle1,obstacle2,obstacle3,obstacle4,obstacle5,
     obstacle6
 var score;
 var gameOver,restart,gameOverImg,restartImg;
+var jumpSound,endSound;
 
 function preload(){
   trex_running=loadAnimation("trex1.png","trex3.png","trex4.png");
@@ -23,6 +24,10 @@ function preload(){
   cloudImage=loadImage("cloud.png");
   gameOverImg=loadImage("gameOver.png");
   restartImg=loadImage("restart.png");
+  jumpSound=loadSound("jump.mp3");
+  endSound=loadSound("die.mp3");
+  
+  
 }
 
 function setup() {
@@ -51,18 +56,21 @@ function setup() {
   cloudGroup = new Group();
   obstaclesGroup =new Group();
   score =0;
+  trex.debug=true;
+  trex.setCollider("circle",0,0,40);
   
 }
 
 function draw() {
   background(180);
   if(gameState === PLAY){
-    if(keyDown('space')){
+    if(keyDown('space') && trex.y >150){
       trex.velocityY=-10;
+      jumpSound.play();
     }
     score=score+Math.round(getFrameRate()/60);
     text("Score: " + score,50,50);
-    ground.velocityX =-2;
+    ground.velocityX =-8;
     if(ground.x<0)
     {
       ground.x=ground.width/2;
@@ -71,6 +79,7 @@ function draw() {
        spawnObstacles();
     if(obstaclesGroup.isTouching(trex)){
       gameState=END;
+      endSound.play();
       //
     }
   }
@@ -91,10 +100,25 @@ function draw() {
   trex.velocityY=trex.velocityY +0.8;
   trex.collide(invisibleGround);
   
- 
+ if(mousePressedOver(restart)) {
+    reset();
+  }
   drawSprites();
 }
-
+function reset(){
+  gameState = PLAY;
+  
+  gameOver.visible = false;
+  restart.visible = false;
+  
+  obstaclesGroup.destroyEach();
+  cloudGroup.destroyEach();
+  
+  trex.changeAnimation("running");
+  
+  score = 0;
+  
+}
 function spawnClouds(){
   if(frameCount % 60===0){
     var cloud= createSprite(600,120,40,10);
@@ -112,7 +136,7 @@ function spawnClouds(){
 function spawnObstacles(){
   if(frameCount % 60 ===0){
     var obstacle= createSprite(600,165,10,40);
-    obstacle.velocityX=-2;
+    obstacle.velocityX=-8;
     var rand= Math.round(random(1,6));
     switch(rand){
       case 1: obstacle.addImage(obstacle1);
